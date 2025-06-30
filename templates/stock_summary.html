@@ -59,7 +59,7 @@
             <td>
                 {% if not entry.undone %}
                     {% if current_user.role == 'admin' %}
-                    <form action="/undo-order/{{ order.id }}" method="POST">
+                    <form action="/undo-order/{{ entry.id }}" method="POST">
                         <button type="submit">Undo</button>
                     </form>
                     {% endif %}

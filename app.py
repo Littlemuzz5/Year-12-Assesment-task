@@ -193,26 +193,23 @@ def confirm_email(token):
 def login():
     email = request.form["email"]
     password = request.form["password"]
-
     user = User.query.filter_by(email=email).first()
 
-    if not user or not check_password_hash(user.password, password):
-        return "Invalid credentials"
+    if user:
+        if not user.confirmed:
+            flash("Your account is not verified. Please contact muzzboost091@gmail.com to be added.", "danger")
+            return redirect("/")
+        if check_password_hash(user.password, password):
+            login_user(user)
+            session["user_id"] = user.id
+            return redirect("/order" if user.role == "admin" else "/stock-summary")
+        else:
+            flash("Incorrect password. Please try again.", "danger")
+            return redirect("/")
+    else:
+        flash("Email not found. Please sign up or contact support.", "danger")
+        return redirect("/")
 
-    if not user.confirmed:
-        return "Please confirm your email before logging in."
-
-    # ✅ Allow only users with a known role
-    if user.role not in {"admin", "viewer"}:
-        return render_template_string("""
-            <h2 style="font-family:sans-serif; color:red;">Access Denied</h2>
-            <p>Your email is not currently authorized to access this platform.</p>
-            <p>Please contact <a href="mailto:muzzboost@gmail.com">muzzboost@gmail.com</a> to request access.</p>
-            <a href="/">Return to Home</a>
-        """)
-
-    login_user(user)
-    return redirect(url_for("order_form"))
 
 
 # ----------------------------- Logout Route -----------------------------
