@@ -200,7 +200,11 @@ def order_completion():
 @app.route("/stock-summary", methods=["GET", "POST"])
 @login_required
 def stock_summary():
-    user = User.query.get(session["user_id"])
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect(url_for("home"))  # Failsafe (shouldn't be hit because of @login_required)
+    user= User.query.get(user_id)
+
     group_by_name = False
     if request.method == "POST":
         group_by_name = request.form.get("groupByName") == "on"
