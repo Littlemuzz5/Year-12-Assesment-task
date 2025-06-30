@@ -103,12 +103,19 @@ def signup():
     confirm_url = url_for('confirm_email', token=token, _external=True)
 
     # ✅ Determine role based on email
-    if email == {"ethanplm091@gmail.com","rowan.kelly@mn.catholic.edu.au"}:
+    # ✅ Determine role based on email
+    if email in {"ethanplm091@gmail.com", "rowan.kelly@mn.catholic.edu.au"}:
         role = "admin"
     elif email in {"ethanplm1@gmail.com", "danielelrond98@gmail.com"}:
         role = "viewer"
     else:
-        return "Unauthorized: You are not allowed to register."
+        return render_template_string("""
+            <h2 style="font-family:sans-serif; color:red;">Unauthorized</h2>
+            <p>You are not allowed to register with this email.</p>
+            <p>Please contact <a href="mailto:muzzboost@gmail.com">muzzboost@gmail.com</a> to request access.</p>
+            <a href="/">Return to Home</a>
+        """)
+
 
     hashed_password = generate_password_hash(password)
 
