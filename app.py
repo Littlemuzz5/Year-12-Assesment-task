@@ -201,7 +201,10 @@ def order_completion():
 @login_required
 def stock_summary():
     user = User.query.get(session["user_id"])
-    group_by_name = request.form.get("groupByName") == "on"
+    group_by_name = False
+    if request.method == "POST":
+        group_by_name = request.form.get("groupByName") == "on"
+
 
 
     if group_by_name:
