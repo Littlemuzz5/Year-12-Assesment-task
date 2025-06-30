@@ -61,7 +61,9 @@
     <a href="/">Main Page</a>
     <a href="/order">Stock Order</a>
     <a href="/stock-summary">Stock Summary</a>
-
+    {% if session.get('user_id') %}
+    <a href="/logout">Logout</a>
+    {% endif %}
 
 </nav>
 
@@ -113,6 +115,7 @@
     </form>
   </div>
 </div>
+
 
 
 </body>

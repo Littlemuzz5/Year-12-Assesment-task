@@ -4,6 +4,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import func
 from functools import wraps
 import os
+from flask_mail import Mail, Message
+from itsdangerous import URLSafeTimedSerializer
+
+
 
 app = Flask(__name__)
 app.secret_key = "super_secret_key"
@@ -20,13 +24,26 @@ class Order(db.Model):
     stock_amount = db.Column(db.String(50), nullable=False)
     real_name = db.Column(db.String(100), nullable=False)
 
+
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
+    confirmed = db.Column(db.Boolean, default=False)  # ✅ Add this
+
 
 with app.app_context():
     db.create_all()
+
+
+# Mail setup
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'muzzboost@gmail.com'  # Change this
+app.config['MAIL_PASSWORD'] = 'ujpt ggtd uscw fmzt'     # Use App Password, not your Gmail password
+
+mail = Mail(app)
 
 # ----------------------------- Login Restriction Setup -----------------------------
 # Only allow these specific emails to log in
@@ -48,7 +65,10 @@ def home():
     return render_template("main.html", session=session)
 
 # ----------------------------- Signup Route -----------------------------
+s = URLSafeTimedSerializer(app.secret_key)
+
 @app.route("/signup", methods=["POST"])
+
 def signup():
     email = request.form["email"]
     password = request.form["psw"]
@@ -60,11 +80,42 @@ def signup():
     if User.query.filter_by(email=email).first():
         return "User already exists"
 
+    token = s.dumps(email, salt='email-confirm')
+    confirm_url = url_for('confirm_email', token=token, _external=True)
+
+    msg = Message('Confirm your MuzzBoost account',
+                  sender='muzzboost@gmail.com',
+                  recipients=[email])
+    msg.body = f'Click the link to confirm: {confirm_url}'
+    mail.send(msg)
+
     hashed_password = generate_password_hash(password)
     new_user = User(email=email, password=hashed_password)
     db.session.add(new_user)
     db.session.commit()
-    return redirect(url_for("home"))
+
+    return "Please check your email to confirm your account."
+
+
+@app.route('/confirm/<token>')
+def confirm_email(token):
+    try:
+        email = s.loads(token, salt='email-confirm', max_age=3600)
+    except:
+        return "The confirmation link is invalid or has expired."
+
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return "User not found"
+
+    user.confirmed = True
+    db.session.commit()
+
+    return render_template("email_confirmed.html")
+
+
+
+
 
 # ----------------------------- Login Route -----------------------------
 @app.route("/login", methods=["POST"])
@@ -72,16 +123,20 @@ def login():
     email = request.form["email"]
     password = request.form["password"]
 
-    # Check if email is in authorized list
+    user = User.query.filter_by(email=email).first()
+
+    if not user or not check_password_hash(user.password, password):
+        return "Invalid credentials"
+
+    if not user.confirmed:
+        return "Please confirm your email before logging in."
+
     if email not in AUTHORIZED_EMAILS:
         return "Unauthorized: You do not have access"
 
-    user = User.query.filter_by(email=email).first()
-    if user and check_password_hash(user.password, password):
-        session["user_id"] = user.id  # ✅ Save login session
-        return redirect(url_for("order_form"))
-    else:
-        return "Invalid credentials"
+    session["user_id"] = user.id
+    return redirect(url_for("order_form"))
+
 
 # ----------------------------- Logout Route -----------------------------
 @app.route("/logout")
@@ -122,7 +177,9 @@ def order_completion():
 @app.route("/stock-summary", methods=["GET", "POST"])
 @login_required
 def stock_summary():
+    user = User.query.get(session["user_id"])
     group_by_name = request.form.get("groupByName") == "on"
+
 
     if group_by_name:
         summary = db.session.query(
@@ -138,6 +195,7 @@ def stock_summary():
 
     return render_template_string("""
         <h2>Stock Summary</h2>
+        <p>Logged in as: {{ user.email }}</p>
         <form method="POST">
             <label><input type="checkbox" name="groupByName" {% if group_by_name %}checked{% endif %}> Group by Name</label>
             <button type="submit">Update</button>
