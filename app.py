@@ -291,8 +291,29 @@ def undo_order(order_id):
     db.session.commit()
     return redirect("/stock-summary")
 
+@app.route("/add-role", methods=["POST"])
+@login_required
+@admin_required
+def add_role():
+    email = request.form.get("email")
+    role = request.form.get("role")
 
+    if not email or role not in {"admin", "viewer"}:
+        return "Invalid submission", 400
 
+    # Add email to the correct set
+    if role == "admin":
+        ADMIN_EMAILS.add(email)
+    elif role == "viewer":
+        VIEWER_EMAILS.add(email)
+
+    # Update role in DB if user exists
+    user = User.query.filter_by(email=email).first()
+    if user:
+        user.role = role
+        db.session.commit()
+
+    return redirect("/stock-summary")
 
 
 # ----------------------------- Run the App -----------------------------

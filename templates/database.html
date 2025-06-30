@@ -80,6 +80,17 @@
             button.parentElement.remove();
         }
     </script>
+    <h2>Add New Authorized Email</h2>
+        <form action="/add-role" method="POST">
+        <label>Email: <input type="email" name="email" required></label>
+        <label>Role:
+            <select name="role">
+                <option value="admin">Admin</option>
+                <option value="viewer">Viewer</option>
+            </select>
+        </label>
+        <button type="submit">Add</button>
+    </form>
 
 </body>
 </html>
