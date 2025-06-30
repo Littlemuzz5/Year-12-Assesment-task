@@ -224,27 +224,23 @@ def stock_summary():
     ).group_by(Order.stock_name).all()
 
     return render_template_string("""
-        <h2>Stock Summary</h2>
-        <p>Logged in as: {{ user.email }}</p>
-        <form method="POST">
-            <label><input type="checkbox" name="groupByName" {% if group_by_name %}checked{% endif %}> Group by Name</label>
-            <button type="submit">Update</button>
-        </form>
-        <table border="1">
+    <h2>Stock Summary</h2>
+    <table border="1" cellpadding="8" cellspacing="0">
+        <tr>
+            <th>Stock Name</th>
+            <th>Total Amount</th>
+        </tr>
+        {% for stock in summary %}
             <tr>
-                <th>Stock</th>
-                {% if group_by_name %}<th>Name</th>{% endif %}
-                <th>Total Quantity</th>
+                <td>{{ stock.stock_name }}</td>
+                <td>{{ stock.total }}</td>
             </tr>
-            {% for row in summary %}
-            <tr>
-                <td>{{ row[0] }}</td>
-                {% if group_by_name %}<td>{{ row[1] }}</td>{% endif %}
-                <td>{{ row[-1] }}</td>
-            </tr>
-            {% endfor %}
-        </table>
-    """, summary=summary, group_by_name=group_by_name)
+        {% endfor %}
+    </table>
+    <br>
+    <a href="/">Back to Main Page</a>
+""", summary=summary)
+
 
 # ----------------------------- Run the App -----------------------------
 if __name__ == "__main__":
