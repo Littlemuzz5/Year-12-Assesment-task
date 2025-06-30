@@ -27,9 +27,9 @@ class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     stock_name = db.Column(db.String(100), nullable=False)
     stock_amount = db.Column(db.Integer, nullable=False)
-    name = db.Column(db.String(100), nullable=False)
+    real_name = db.Column(db.String(100), nullable=True)  # ← Add this line
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-    undone = db.Column(db.Boolean, default=False)
+
 
 
 
