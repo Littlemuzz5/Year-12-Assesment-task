@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, render_template_string
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
-from sqlalchemy import func
+from sqlalchemy import func, cast, Integer
 from functools import wraps
 import os
 from flask_mail import Mail, Message
@@ -191,9 +191,9 @@ def order_completion():
             db.session.add(new_order)
 
         db.session.commit()
-        return f"<h2>Thanks {real_name}, your stock update has been received!</h2><a href='/'>Back to Home</a>"
+        return redirect(url_for("stock_summary"))
 
-    return redirect(url_for("order_form"))
+
 
 # ----------------------------- Stock Summary Page -----------------------------
 @app.route("/stock-summary", methods=["GET", "POST"])
@@ -205,15 +205,15 @@ def stock_summary():
 
     if group_by_name:
         summary = db.session.query(
-            Order.stock_name,
-            Order.real_name,
-            func.sum(Order.stock_amount).label("total")
-        ).group_by(Order.stock_name, Order.real_name).all()
+        Order.stock_name,
+        Order.real_name,
+        func.sum(cast(Order.stock_amount, Integer)).label("total")
+    ).group_by(Order.stock_name, Order.real_name).all()
     else:
         summary = db.session.query(
-            Order.stock_name,
-            func.sum(Order.stock_amount).label("total")
-        ).group_by(Order.stock_name).all()
+        Order.stock_name,
+        func.sum(cast(Order.stock_amount, Integer)).label("total")
+    ).group_by(Order.stock_name).all()
 
     return render_template_string("""
         <h2>Stock Summary</h2>
