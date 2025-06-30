@@ -116,7 +116,8 @@ def signup():
     db.session.add(new_user)
     db.session.commit()
 
-    return "Please check your email to confirm your account."
+    return render_template("confirmation_sent.html", email=email)
+
 
 
 @app.route('/confirm/<token>')
@@ -186,7 +187,7 @@ def order_completion():
             return "Missing data", 400
 
         for name, amount, action in zip(stock_names, stock_amounts, stock_actions):
-            signed_amount = f"-{amount}" if action == "remove" else amount
+            signed_amount = -int(amount) if action == "remove" else int(amount)
             new_order = Order(stock_name=name, stock_amount=signed_amount, real_name=real_name)
             db.session.add(new_order)
 
