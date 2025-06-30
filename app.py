@@ -39,6 +39,8 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(512), nullable=False)
     role = db.Column(db.String(50), default='user')  # 'admin' or 'user'
+    confirmed = db.Column(db.Boolean, default=False)
+
 
 ADMIN_EMAILS = {"ethanplm091@gmail.com", "ethanplm1@gmail.com", "danielelrond98@gmail.com"}
 
@@ -240,7 +242,7 @@ def order_completion():
 
 
 # ----------------------------- Stock Summary Page -----------------------------
-@app.route("/stock-summary")
+@app.route('/stock-summary')
 @login_required
 def stock_summary():
     if current_user.role not in {"admin", "viewer"}:
