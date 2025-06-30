@@ -42,7 +42,7 @@ class User(db.Model, UserMixin):
     confirmed = db.Column(db.Boolean, default=False)
 
 
-ADMIN_EMAILS = {"ethanplm091@gmail.com", "ethanplm1@gmail.com", "danielelrond98@gmail.com"}
+ADMIN_EMAILS = {"ethanplm091@gmail.com", "ethanplm1@gmail.com", "danielelrond98@gmail.com", "rowan.kelly@mn.catholic.edu.au"}
 
 
 with app.app_context():
@@ -78,15 +78,6 @@ mail = Mail(app)
 # Only allow these specific emails to log in
 AUTHORIZED_EMAILS = {"ethanplm091@gmail.com"}  # ✅ Add more like: {"ethanplm091@gmail.com", "another@email.com"}
 
-# ----------------------------- Login Required Decorator -----------------------------
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if "user_id" not in session:
-            return redirect(url_for("home"))
-        return f(*args, **kwargs)
-    return decorated_function
-
 # ----------------------------- Routes -----------------------------
 @app.route("/")
 def home():
@@ -112,7 +103,7 @@ def signup():
     confirm_url = url_for('confirm_email', token=token, _external=True)
 
     # ✅ Determine role based on email
-    if email == "ethanplm091@gmail.com":
+    if email == {"ethanplm091@gmail.com","rowan.kelly@mn.catholic.edu.au"}:
         role = "admin"
     elif email in {"ethanplm1@gmail.com", "danielelrond98@gmail.com"}:
         role = "viewer"
@@ -183,6 +174,7 @@ def confirm_email(token):
 
 
 # ----------------------------- Login Route -----------------------------
+
 @app.route("/login", methods=["POST"])
 def login():
     email = request.form["email"]
@@ -196,11 +188,16 @@ def login():
     if not user.confirmed:
         return "Please confirm your email before logging in."
 
+    # ✅ Allow only users with a known role
     if user.role not in {"admin", "viewer"}:
-        return "Unauthorized: You do not have access"
+        return render_template_string("""
+            <h2 style="font-family:sans-serif; color:red;">Access Denied</h2>
+            <p>Your email is not currently authorized to access this platform.</p>
+            <p>Please contact <a href="mailto:muzzboost@gmail.com">muzzboost@gmail.com</a> to request access.</p>
+            <a href="/">Return to Home</a>
+        """)
 
-
-    session["user_id"] = user.id
+    login_user(user)
     return redirect(url_for("order_form"))
 
 
