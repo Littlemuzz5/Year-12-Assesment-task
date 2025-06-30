@@ -8,6 +8,8 @@ from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer
 from datetime import datetime
 from flask_login import current_user, UserMixin, LoginManager, login_user, login_required, logout_user
+import pytz
+
 
 
 
@@ -263,7 +265,19 @@ def stock_summary():
 
     order_history = []
     if current_user.role == "admin":
-        order_history = Order.query.order_by(Order.timestamp.desc()).all()
+        aest = pytz.timezone("Australia/Sydney")
+        order_history = [
+            {
+                "id": order.id,
+                "stock_name": order.stock_name,
+                "stock_amount": order.stock_amount,
+                "real_name": order.real_name,
+                "timestamp": order.timestamp.astimezone(aest),
+                "undone": order.undone
+            }
+            for order in Order.query.order_by(Order.timestamp.desc()).all()
+        ]      
+
 
     return render_template("stock_summary.html", summary=summary, order_history=order_history)
 
