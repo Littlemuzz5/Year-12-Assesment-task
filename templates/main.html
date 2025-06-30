@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        header {
+            background: rgba(0, 120, 212, 1);
+            color: white;
+            padding: 1rem 0;
+            text-align: center;
+        }
+
+        nav {
+            background: #333;
+            color: white;
+            padding: 0.5rem 1rem;
+        }
+
+        nav a {
+            color: white;
+            margin: 0 1rem;
+            text-decoration: none;
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            padding: 1rem;
+        }
+
+        footer {
+            background: #222;
+            color: white;
+            text-align: center;
+            padding: 1rem 0;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Main Page</h1>
+        <p>Welcome to MuzzBoost services</p>
+    </header>
+    <nav>
+<nav>
+    <a href="/">Main Page</a>
+    <a href="/order">Stock Order</a>
+    <a href="/stock-summary">Stock Summary</a>
+
+
+</nav>
+
+    </nav>
+    <div class="container">
+        <h2>About Us</h2>
+        <p>Welcome thanks on visiting my website</p>
+    </div>
+    <!-- Button to open the modal -->
+<button onclick="document.getElementById('signupModal').style.display='block'" class="button">Sign Up</button>
+
+<!-- Signup Modal -->
+<div id="signupModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.6); z-index:1000;">
+  <div class="modal-content" style="background:white; margin:10% auto; padding:20px; width:90%; max-width:400px; position:relative;">
+    <span onclick="document.getElementById('signupModal').style.display='none'" style="position:absolute; right:10px; top:10px; font-size:24px; cursor:pointer;">&times;</span>
+    <form action="/signup" method="POST">
+      <h2>Sign Up</h2>
+      <label><b>Email</b></label>
+      <input type="text" placeholder="Enter Email" name="email" required style="width:100%; padding:10px; margin:8px 0;">
+      
+      <label><b>Password</b></label>
+      <input type="password" placeholder="Enter Password" name="psw" required style="width:100%; padding:10px; margin:8px 0;">
+
+      <label><b>Repeat Password</b></label>
+      <input type="password" placeholder="Repeat Password" name="psw-repeat" required style="width:100%; padding:10px; margin:8px 0;">
+
+      <button type="submit" class="button" style="padding:10px 20px; margin-top:10px;">Sign Up</button>
+    </form>
+  </div>
+</div>
+
+
+<!-- button for login -->
+<button onclick="document.getElementById('loginModal').style.display='block'" class="button">Login</button>
+
+<!-- Login Modal -->
+<div id="loginModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.6); z-index:1000;">
+  <div class="modal-content" style="background:white; margin:10% auto; padding:20px; width:90%; max-width:400px; position:relative;">
+    <span onclick="document.getElementById('loginModal').style.display='none'" style="position:absolute; right:10px; top:10px; font-size:24px; cursor:pointer;">&times;</span>
+    <form action="/login" method="POST">
+      <h2>Login</h2>
+      <label><b>Email</b></label>
+      <input type="text" placeholder="Enter Email" name="email" required style="width:100%; padding:10px; margin:8px 0;">
+
+      <label><b>Password</b></label>
+      <input type="password" placeholder="Enter Password" name="password" required style="width:100%; padding:10px; margin:8px 0;">
+
+      <button type="submit" class="button" style="padding:10px 20px; margin-top:10px;">Login</button>
+    </form>
+  </div>
+</div>
+
+
+</body>
+</html>

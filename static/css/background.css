@@ -1,0 +1,136 @@
+*{
+    box-sizing: border-box;
+}
+
+body {
+  background-image: url("/static/images/your-background.jpg");
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+header {
+  background-color: rgba(0, 157, 255, 0.7);
+  color: white;
+  padding: 20px;
+  text-align: center;
+}
+
+nav {
+    background-color: #333;
+    padding: 10px;
+    text-align: center;
+}
+
+nav a {
+    color: white;
+    margin: 0 10px;
+    text-decoration: none;
+}
+
+nav a:hover {
+    text-decoration: underline;
+}
+
+
+p, h1, h2 {
+    color:rgb(56, 22, 168)
+}
+div.bodycol1 {
+    background-color: purple;
+    width: 50%;
+    display: inline-block;
+}
+div.bodycol2 {
+    background-color: pink;
+    width: 50%;
+    display: inline-block;
+    float:right;
+}
+div.bodycol3 {
+    background-color: violet;
+    width: 50%;
+    display:inline-block;
+}
+div.bodycol4 {
+    background-color: rgb(16, 192, 39);
+    width: 50%;
+    display:inline-block;
+    float:right;
+}
+div.bodycol5 {
+    background-color: rgb(14, 121, 41);
+    width: 50%;
+    display:inline-block;
+    float:right;
+}
+div.bodycol6 {
+    background-color: rgb(16, 169, 192);
+    width: 50%;
+    display:inline-block;
+}
+div.bodycol7 {
+    background-color: rgb(13, 234, 156);
+    width: 50%;
+    display:inline-block;
+}
+div.body img {
+    width: 50%;
+    height: auto;
+    float:left;
+}
+@media(max-width: 768px) {
+    div.header {
+        background-color: aqua;
+    }
+    div.bodycol1,
+    div.bodycol2,
+    div.bodycol3,
+    div.bodycol4,
+    div.bodycol5{
+        width:100%;
+        float:none;
+    }
+}
+.button {
+    background-color: #04AA6D;
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+}
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  padding-top: 100px;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+  background-color: #fff;
+  margin: auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 90%;
+  max-width: 400px;
+  position: relative;
+}
+
+.modal-content input {
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0;
+}

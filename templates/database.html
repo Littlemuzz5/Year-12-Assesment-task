@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/background.css">
+    <title>Main Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        .entry {
+            margin-bottom: 10px;
+        }
+
+        input, select {
+            padding: 8px;
+            margin-right: 5px;
+            width: 160px;
+        }
+
+        .remove-btn {
+            background-color: crimson;
+            color: white;
+            border: none;
+        }
+
+        button {
+            padding: 8px 12px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Enter Your Stock Orders</h2>
+
+    <form id="stockForm" action="/order-completion" method="POST">
+        <div id="entriesContainer">
+            <div class="entry">
+                <input type="text" name="stockName" placeholder="Stock name" required />
+                <input type="text" name="stockAmount" placeholder="How many?" required />
+                <select name="stockAction" required>
+                    <option value="add">Add</option>
+                    <option value="remove">Remove</option>
+                </select>
+                <button type="button" class="remove-btn" onclick="removeEntry(this)">✖</button>
+            </div>
+        </div>
+
+        <input type="text" name="realName" placeholder="Your real name" required />
+
+        <br />
+        <button type="button" onclick="addEntry()">Add Another Stock</button>
+        <button type="submit">Submit All</button>
+    </form>
+
+    <script>
+        function addEntry() {
+            const container = document.getElementById('entriesContainer');
+            const entry = document.createElement('div');
+            entry.className = 'entry';
+            entry.innerHTML = `
+                <input type="text" name="stockName" placeholder="Stock name" required />
+                <input type="text" name="stockAmount" placeholder="How many?" required />
+                <select name="stockAction" required>
+                    <option value="add">Add</option>
+                    <option value="remove">Remove</option>
+                </select>
+                <button type="button" class="remove-btn" onclick="removeEntry(this)">✖</button>
+            `;
+            container.appendChild(entry);
+        }
+
+        function removeEntry(button) {
+            button.parentElement.remove();
+        }
+    </script>
+
+</body>
+</html>
