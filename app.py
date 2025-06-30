@@ -8,7 +8,7 @@ from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer
 from datetime import datetime
 from flask_login import current_user, UserMixin, LoginManager, login_user, login_required, logout_user
-from app import app, db, User
+
 
 
 
@@ -48,10 +48,11 @@ with app.app_context():
     db.create_all()
 
 with app.app_context():
-    admin = User.query.filter_by(email="ethanplm091@gmail.com").first()
-    if admin:
-        admin.role = "admin"
+    admin_user = User.query.filter_by(email="ethanplm091@gmail.com").first()
+    if admin_user:
+        admin_user.role = 'admin'
         db.session.commit()
+
 
 
 login_manager = LoginManager()
