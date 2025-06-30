@@ -47,7 +47,9 @@ VIEWER_EMAILS = {"ethanplm1@gmail.com", "danielelrond98@gmail.com"}
 
 
 with app.app_context():
+    db.drop_all()
     db.create_all()
+
 
 with app.app_context():
     users = User.query.all()
