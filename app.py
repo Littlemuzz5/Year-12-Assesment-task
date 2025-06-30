@@ -21,8 +21,9 @@ db = SQLAlchemy(app)
 class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     stock_name = db.Column(db.String(100), nullable=False)
-    stock_amount = db.Column(db.String(50), nullable=False)
+    stock_amount = db.Column(db.Integer, nullable=False)  # ✅ change from String to Integer
     real_name = db.Column(db.String(100), nullable=False)
+
 
 
 class User(db.Model):
@@ -87,7 +88,27 @@ def signup():
     msg = Message('Confirm your MuzzBoost account',
                   sender='muzzboost@gmail.com',
                   recipients=[email])
-    msg.body = f'Click the link to confirm: {confirm_url}'
+    msg.body = f"Please confirm your email by clicking this link: {confirm_url}"
+    msg.html = f"""
+<html>
+  <body style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 30px;">
+    <div style="max-width: 600px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+      <h2 style="color: #0074D9;">Welcome to MuzzBoost</h2>
+      <p>Hi there,</p>
+      <p>Thank you for signing up! To complete your registration, please verify your email address by clicking the button below:</p>
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="{confirm_url}" style="background-color: #0074D9; color: white; padding: 12px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+          Confirm My Email
+        </a>
+      </div>
+      <p>If you did not request this, you can safely ignore this email.</p>
+      <hr style="margin-top: 40px;">
+      <p style="font-size: 12px; color: #888;">MuzzBoost Team<br>Do not reply to this automated email.</p>
+    </div>
+  </body>
+</html>
+"""
+
     mail.send(msg)
 
     hashed_password = generate_password_hash(password)
