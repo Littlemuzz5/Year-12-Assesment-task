@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Stock Summary</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 8px 12px;
+            border: 1px solid black;
+        }
+        h2 {
+            margin-top: 40px;
+        }
+        .nav-links a {
+            margin-right: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Stock Summary</h1>
+
+    <div class="nav-links">
+        <a href="/">🔁 Back to Main Page</a>
+        <a href="/order">📦 Submit New Order</a>
+    </div>
+
+    <h2>Current Stock Totals</h2>
+    <table>
+        <tr>
+            <th>Stock Name</th>
+            <th>Total Amount</th>
+        </tr>
+        {% for stock in summary %}
+        <tr>
+            <td>{{ stock.stock_name }}</td>
+            <td>{{ stock.total }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Order History</h2>
+    <table>
+        <tr>
+            <th>Stock Name</th>
+            <th>Amount</th>
+            <th>Submitted By</th>
+            <th>Timestamp</th>
+            <th>Undo</th>
+        </tr>
+        {% for entry in order_history %}
+        <tr {% if entry.undone %}style="opacity: 0.5;"{% endif %}>
+            <td>{{ entry.stock_name }}</td>
+            <td>{{ entry.stock_amount }}</td>
+            <td>{{ entry.name }}</td>
+            <td>{{ entry.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+            <td>
+                {% if not entry.undone %}
+                    {% if current_user.role == 'admin' %}
+                    <form action="/undo-order/{{ order.id }}" method="POST">
+                        <button type="submit">Undo</button>
+                    </form>
+                    {% endif %}
+                {% else %}
+                    Undone
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+</body>
+</html>

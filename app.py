@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, render_template_string
+from flask import Flask, render_template, request, redirect, url_for, session, render_template_string, abort
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import func, cast, Integer
@@ -6,6 +6,11 @@ from functools import wraps
 import os
 from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer
+from datetime import datetime
+from flask_login import current_user, UserMixin, LoginManager, login_user, login_required, logout_user
+
+
+
 
 
 
@@ -21,21 +26,38 @@ db = SQLAlchemy(app)
 class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     stock_name = db.Column(db.String(100), nullable=False)
-    stock_amount = db.Column(db.Integer, nullable=False)  # ✅ change from String to Integer
-    real_name = db.Column(db.String(100), nullable=False)
+    stock_amount = db.Column(db.Integer, nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    undone = db.Column(db.Boolean, default=False)
 
 
 
-class User(db.Model):
+
+class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(255), nullable=False)
-    confirmed = db.Column(db.Boolean, default=False)  # ✅ Add this
+    email = db.Column(db.String(150), unique=True, nullable=False)
+    password = db.Column(db.String(150), nullable=False)
+    role = db.Column(db.String(50), default='user')  # 'admin' or 'user'
+
+ADMIN_EMAILS = {"ethanplm091@gmail.com", "ethanplm1@gmail.com", "danielelrond98@gmail.com"}
 
 
 with app.app_context():
     db.drop_all()
     db.create_all()
+
+admin_user = User.query.filter_by(email="ethanplm091@gmail.com").first()
+admin_user.role = 'admin'
+db.session.commit()
+
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 
 # Mail setup
@@ -70,7 +92,6 @@ def home():
 s = URLSafeTimedSerializer(app.secret_key)
 
 @app.route("/signup", methods=["POST"])
-
 def signup():
     email = request.form["email"]
     password = request.form["psw"]
@@ -85,40 +106,56 @@ def signup():
     token = s.dumps(email, salt='email-confirm')
     confirm_url = url_for('confirm_email', token=token, _external=True)
 
+    # ✅ Determine role based on email
+    if email == "ethanplm091@gmail.com":
+        role = "admin"
+    elif email in {"ethanplm1@gmail.com", "danielelrond98@gmail.com"}:
+        role = "viewer"
+    else:
+        return "Unauthorized: You are not allowed to register."
+
+    hashed_password = generate_password_hash(password)
+
+    # ✅ Correct creation with role
+    new_user = User(email=email, password=hashed_password, role=role)
+    db.session.add(new_user)
+    db.session.commit()
+
+    # ✅ Send confirmation email
     msg = Message('Confirm your MuzzBoost account',
                   sender='muzzboost@gmail.com',
                   recipients=[email])
-    msg.body = f"Please confirm your email by clicking this link: {confirm_url}"
     msg.html = f"""
-<html>
-  <body style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 30px;">
-    <div style="max-width: 600px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
-      <h2 style="color: #0074D9;">Welcome to MuzzBoost</h2>
-      <p>Hi there,</p>
-      <p>Thank you for signing up! To complete your registration, please verify your email address by clicking the button below:</p>
-      <div style="text-align: center; margin: 30px 0;">
-        <a href="{confirm_url}" style="background-color: #0074D9; color: white; padding: 12px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">
-          Confirm My Email
-        </a>
-      </div>
-      <p>If you did not request this, you can safely ignore this email.</p>
-      <hr style="margin-top: 40px;">
-      <p style="font-size: 12px; color: #888;">MuzzBoost Team<br>Do not reply to this automated email.</p>
-    </div>
-  </body>
-</html>
-"""
-
+    <html>
+      <body style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 30px;">
+        <div style="max-width: 600px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+          <h2 style="color: #0074D9;">Welcome to MuzzBoost</h2>
+          <p>Hi there,</p>
+          <p>Thank you for signing up! To complete your registration, please verify your email address by clicking the button below:</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="{confirm_url}" style="background-color: #0074D9; color: white; padding: 12px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+              Confirm My Email
+            </a>
+          </div>
+          <p>If you did not request this, you can safely ignore this email.</p>
+          <hr style="margin-top: 40px;">
+          <p style="font-size: 12px; color: #888;">MuzzBoost Team<br>Do not reply to this automated email.</p>
+        </div>
+      </body>
+    </html>
+    """
     mail.send(msg)
-
-    hashed_password = generate_password_hash(password)
-    new_user = User(email=email, password=hashed_password)
-    db.session.add(new_user)
-    db.session.commit()
 
     return render_template("confirmation_sent.html", email=email)
 
 
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if current_user.role != 'admin':
+            abort(403)
+        return f(*args, **kwargs)
+    return decorated_function
 
 @app.route('/confirm/<token>')
 def confirm_email(token):
@@ -154,8 +191,9 @@ def login():
     if not user.confirmed:
         return "Please confirm your email before logging in."
 
-    if email not in AUTHORIZED_EMAILS:
+    if user.role not in {"admin", "viewer"}:
         return "Unauthorized: You do not have access"
+
 
     session["user_id"] = user.id
     return redirect(url_for("order_form"))
@@ -170,12 +208,14 @@ def logout():
 # ----------------------------- Order Form Page -----------------------------
 @app.route("/order", methods=["GET"])
 @login_required
+@admin_required
 def order_form():
     return render_template("database.html")
 
 # ----------------------------- Order Submission -----------------------------
 @app.route("/order-completion", methods=["GET", "POST"])
 @login_required
+@admin_required
 def order_completion():
     if request.method == "POST":
         stock_names = request.form.getlist("stockName")
@@ -197,49 +237,35 @@ def order_completion():
 
 
 # ----------------------------- Stock Summary Page -----------------------------
-@app.route("/stock-summary", methods=["GET", "POST"])
+@app.route("/stock-summary")
 @login_required
 def stock_summary():
-    user_id = session.get("user_id")
-    if not user_id:
-        return redirect(url_for("home"))  # Failsafe (shouldn't be hit because of @login_required)
-    user= User.query.get(user_id)
+    if current_user.role not in {"admin", "viewer"}:
+        abort(403)
 
-    group_by_name = False
-    if request.method == "POST":
-        group_by_name = request.form.get("groupByName") == "on"
-
-
-
-    if group_by_name:
-        summary = db.session.query(
+    summary = db.session.query(
         Order.stock_name,
-        Order.real_name,
-        func.sum(cast(Order.stock_amount, Integer)).label("total")
-    ).group_by(Order.stock_name, Order.real_name).all()
-    else:
-        summary = db.session.query(
-        Order.stock_name,
-        func.sum(cast(Order.stock_amount, Integer)).label("total")
-    ).group_by(Order.stock_name).all()
+        db.func.sum(Order.stock_amount).label("total")
+    ).filter_by(undone=False).group_by(Order.stock_name).all()
 
-    return render_template_string("""
-    <h2>Stock Summary</h2>
-    <table border="1" cellpadding="8" cellspacing="0">
-        <tr>
-            <th>Stock Name</th>
-            <th>Total Amount</th>
-        </tr>
-        {% for stock in summary %}
-            <tr>
-                <td>{{ stock.stock_name }}</td>
-                <td>{{ stock.total }}</td>
-            </tr>
-        {% endfor %}
-    </table>
-    <br>
-    <a href="/">Back to Main Page</a>
-""", summary=summary)
+    order_history = []
+    if current_user.role == "admin":
+        order_history = Order.query.order_by(Order.timestamp.desc()).all()
+
+    return render_template("stock_summary.html", summary=summary, order_history=order_history)
+
+
+
+@app.route("/undo-order/<int:order_id>", methods=["POST"])
+@login_required
+def undo_order(order_id):
+    order = Order.query.get_or_404(order_id)
+    order.undone = True
+    db.session.commit()
+    return redirect("/stock-summary")
+
+
+
 
 
 # ----------------------------- Run the App -----------------------------
