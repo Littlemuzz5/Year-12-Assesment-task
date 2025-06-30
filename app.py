@@ -42,18 +42,23 @@ class User(db.Model, UserMixin):
     confirmed = db.Column(db.Boolean, default=False)
 
 
-ADMIN_EMAILS = {"ethanplm091@gmail.com", "ethanplm1@gmail.com", "danielelrond98@gmail.com", "rowan.kelly@mn.catholic.edu.au"}
+ADMIN_EMAILS = {"ethanplm091@gmail.com", "rowan.kelly@mn.catholic.edu.au"}
+VIEWER_EMAILS = {"ethanplm1@gmail.com", "danielelrond98@gmail.com"}
 
 
 with app.app_context():
-    db.drop_all()
     db.create_all()
 
 with app.app_context():
-    admin_user = User.query.filter_by(email="ethanplm091@gmail.com").first()
-    if admin_user:
-        admin_user.role = 'admin'
-        db.session.commit()
+    users = User.query.all()
+    for user in users:
+        if user.email in ADMIN_EMAILS:
+            user.role = 'admin'
+        elif user.email in VIEWER_EMAILS:
+            user.role = 'viewer'
+        else:
+            user.role = 'unauthorized'
+    db.session.commit()
 
 
 
@@ -103,10 +108,9 @@ def signup():
     confirm_url = url_for('confirm_email', token=token, _external=True)
 
     # ✅ Determine role based on email
-    # ✅ Determine role based on email
-    if email in {"ethanplm091@gmail.com", "rowan.kelly@mn.catholic.edu.au"}:
+    if email in ADMIN_EMAILS:
         role = "admin"
-    elif email in {"ethanplm1@gmail.com", "danielelrond98@gmail.com"}:
+    elif email in VIEWER_EMAILS:
         role = "viewer"
     else:
         return render_template_string("""
