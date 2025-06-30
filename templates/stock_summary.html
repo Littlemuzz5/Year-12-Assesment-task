@@ -55,7 +55,7 @@
             <td>{{ entry.stock_name }}</td>
             <td>{{ entry.stock_amount }}</td>
             <td>{{ entry.real_name }}</td>
-            <td>{{ entry.timestamp.strftime('%Y-%m-%d %I:%M %p %Z') }}</td>
+            <td><span class="local-time" data-utc="{{ entry.timestamp.isoformat() }}"></span></td>
             <td>
                 {% if not entry.undone %}
                     {% if current_user.role == 'admin' %}
@@ -70,6 +70,11 @@
         </tr>
         {% endfor %}
     </table>
-
+<script>
+  document.querySelectorAll('.local-time').forEach(function(span) {
+    const utcTime = new Date(span.dataset.utc);
+    span.textContent = utcTime.toLocaleString() + ' (Your time)';  // Will auto-convert to user's local time
+  });
+</script>
 </body>
 </html>
