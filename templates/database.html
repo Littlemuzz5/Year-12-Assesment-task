@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="/static/css/background.css">
     <title>Main Page</title>
     <style>
+        /* Basic styling for input form */
         body {
             font-family: Arial, sans-serif;
             padding: 20px;
@@ -37,10 +38,13 @@
 </head>
 <body>
 
+    <!-- Header -->
     <h2>Enter Your Stock Orders</h2>
 
+    <!-- Form to submit stock entries -->
     <form id="stockForm" action="/order-completion" method="POST">
         <div id="entriesContainer">
+            <!-- First entry row -->
             <div class="entry">
                 <input type="text" name="stockName" placeholder="Stock name" required />
                 <input type="text" name="stockAmount" placeholder="How many?" required />
@@ -52,13 +56,16 @@
             </div>
         </div>
 
+        <!-- User's name -->
         <input type="text" name="realName" placeholder="Your real name" required />
 
+        <!-- Add more entries / submit -->
         <br />
         <button type="button" onclick="addEntry()">Add Another Stock</button>
         <button type="submit">Submit All</button>
     </form>
 
+    <!-- Script to add/remove stock entry rows dynamically -->
     <script>
         function addEntry() {
             const container = document.getElementById('entriesContainer');
@@ -80,8 +87,10 @@
             button.parentElement.remove();
         }
     </script>
+
+    <!-- Admin Role Assignment -->
     <h2>Add New Authorized Email</h2>
-        <form action="/add-role" method="POST">
+    <form action="/add-role" method="POST">
         <label>Email: <input type="email" name="email" required></label>
         <label>Role:
             <select name="role">
@@ -92,12 +101,12 @@
         <button type="submit">Add</button>
     </form>
 
+    <!-- Alert Notification Emails -->
     <h2>Add Email for Low Stock Notifications</h2>
     <form action="/add-alert-email" method="POST">
         <label>Email: <input type="email" name="email" required></label>
         <button type="submit">Add</button>
     </form>
-
 
 </body>
 </html>

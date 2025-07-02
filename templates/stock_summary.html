@@ -3,6 +3,7 @@
 <head>
     <title>Stock Summary</title>
     <style>
+        /* Basic styling for table and page layout */
         table {
             border-collapse: collapse;
             margin-bottom: 20px;
@@ -20,19 +21,23 @@
     </style>
 </head>
 <body>
+    <!-- Page Title -->
     <h1>Stock Summary</h1>
 
+    <!-- Navigation links -->
     <div class="nav-links">
         <a href="/">🔁 Back to Main Page</a>
         <a href="/order">📦 Submit New Order</a>
     </div>
 
+    <!-- Section showing current stock totals -->
     <h2>Current Stock Totals</h2>
     <table>
         <tr>
             <th>Stock Name</th>
             <th>Total Amount</th>
         </tr>
+        <!-- Loop through 'summary' data from Flask to show each stock's total amount -->
         {% for stock in summary %}
         <tr>
             <td>{{ stock.stock_name }}</td>
@@ -41,6 +46,7 @@
         {% endfor %}
     </table>
 
+    <!-- Section showing the full order history -->
     <h2>Order History</h2>
     <table>
         <tr>
@@ -50,13 +56,17 @@
             <th>Timestamp</th>
             <th>Undo</th>
         </tr>
+        <!-- Loop through 'order_history' and display each entry -->
         {% for entry in order_history %}
+        <!-- If order is undone, dim the row -->
         <tr {% if entry.undone %}style="opacity: 0.5;"{% endif %}>
             <td>{{ entry.stock_name }}</td>
             <td>{{ entry.stock_amount }}</td>
             <td>{{ entry.real_name }}</td>
+            <!-- Timestamp is rendered in local user time via JS -->
             <td><span class="local-time" data-utc="{{ entry.timestamp.isoformat() }}"></span></td>
             <td>
+                <!-- If the order hasn't been undone and the user is admin, show Undo button -->
                 {% if not entry.undone %}
                     {% if current_user.role == 'admin' %}
                     <form action="/undo-order/{{ entry.id }}" method="POST">
@@ -64,16 +74,20 @@
                     </form>
                     {% endif %}
                 {% else %}
+                    <!-- If already undone, show text -->
                     Undone
                 {% endif %}
             </td>
         </tr>
         {% endfor %}
     </table>
+
+<!-- Script to convert UTC time from backend to user's local time -->
 <script>
   document.querySelectorAll('.local-time').forEach(function(span) {
-    const utcTime = new Date(span.dataset.utc);
-    span.textContent = utcTime.toLocaleString() + ' (Your time)';  // Will auto-convert to user's local time
+    const utcTime = new Date(span.dataset.utc); // Parse UTC datetime
+    // Display it in the user's local timezone
+    span.textContent = utcTime.toLocaleString() + ' (Your time)';
   });
 </script>
 </body>
