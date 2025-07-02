@@ -34,7 +34,9 @@ class Order(db.Model):
     undone = db.Column(db.Boolean, default=False)
 
 
-
+class AlertEmail(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(150), unique=True, nullable=False)
 
 
 class User(db.Model, UserMixin):
@@ -47,6 +49,8 @@ class User(db.Model, UserMixin):
 
 ADMIN_EMAILS = {"ethanplm091@gmail.com", "rowan.kelly@mn.catholic.edu.au"}
 VIEWER_EMAILS = {"ethanplm1@gmail.com", "danielelrond98@gmail.com"}
+
+LOW_STOCK_THRESHOLD = 5
 
 
 with app.app_context():
@@ -95,6 +99,28 @@ def home():
     return render_template("main.html", session=session)
 
 # ----------------------------- Signup Route -----------------------------
+
+
+def notify_admins_low_stock(stock_name, total_amount):
+    # Always include Ethan
+    default_recipient = "ethanplm091@gmail.com"
+    extra_recipients = [e.email for e in AlertEmail.query.all()]
+    recipients = list(set([default_recipient] + extra_recipients))
+
+    subject = f"🔔 Low Stock Alert: {stock_name}"
+    body = f"The stock level for '{stock_name}' has dropped to {total_amount} units. Please take necessary action."
+
+    msg = Message(subject, sender='muzzboost@gmail.com', recipients=recipients)
+    msg.body = body
+    try:
+        mail.send(msg)
+    except Exception as e:
+        print(f"Error sending low stock email: {e}")
+
+
+
+
+
 s = URLSafeTimedSerializer(app.secret_key)
 
 @app.route("/signup", methods=["POST"])
@@ -251,6 +277,15 @@ def order_completion():
 
 
 
+# Check for low stock levels
+low_stock_items = db.session.query(
+    Order.stock_name,
+    db.func.sum(Order.stock_amount).label("total")
+).filter_by(undone=False).group_by(Order.stock_name).having(db.func.sum(Order.stock_amount) < LOW_STOCK_THRESHOLD).all()
+
+for item in low_stock_items:
+    notify_admins_low_stock(item.stock_name, item.total)
+
 # ----------------------------- Stock Summary Page -----------------------------
 @app.route('/stock-summary')
 @login_required
@@ -281,6 +316,20 @@ def stock_summary():
 
     return render_template("stock_summary.html", summary=summary, order_history=order_history)
 
+@app.route("/add-alert-email", methods=["POST"])
+@login_required
+@admin_required
+def add_alert_email():
+    email = request.form.get("email")
+    if not email:
+        return "Missing email", 400
+
+    if not AlertEmail.query.filter_by(email=email).first():
+        new_email = AlertEmail(email=email)
+        db.session.add(new_email)
+        db.session.commit()
+
+    return redirect("/order")
 
 
 @app.route("/undo-order/<int:order_id>", methods=["POST"])
