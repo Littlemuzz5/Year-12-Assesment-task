@@ -273,18 +273,20 @@ def order_completion():
             db.session.add(new_order)
 
         db.session.commit()
+
+        # ✅ Moved inside the request context
+        low_stock_items = db.session.query(
+            Order.stock_name,
+            db.func.sum(Order.stock_amount).label("total")
+        ).filter_by(undone=False).group_by(Order.stock_name).having(
+            db.func.sum(Order.stock_amount) < LOW_STOCK_THRESHOLD
+        ).all()
+
+        for item in low_stock_items:
+            notify_admins_low_stock(item.stock_name, item.total)
+
         return redirect(url_for("stock_summary"))
 
-
-
-# Check for low stock levels
-low_stock_items = db.session.query(
-    Order.stock_name,
-    db.func.sum(Order.stock_amount).label("total")
-).filter_by(undone=False).group_by(Order.stock_name).having(db.func.sum(Order.stock_amount) < LOW_STOCK_THRESHOLD).all()
-
-for item in low_stock_items:
-    notify_admins_low_stock(item.stock_name, item.total)
 
 # ----------------------------- Stock Summary Page -----------------------------
 @app.route('/stock-summary')
