@@ -37,6 +37,13 @@ class Order(db.Model):
 class AlertEmail(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(150), unique=True, nullable=False)
+    active = db.Column(db.Boolean, default=True)
+
+class LowStockFlag(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    stock_name = db.Column(db.String(100), unique=True, nullable=False)
+    active = db.Column(db.Boolean, default=True)
+
 
 
 class User(db.Model, UserMixin):
@@ -274,7 +281,16 @@ def order_completion():
 
         db.session.commit()
 
-        # ✅ Moved inside the request context
+        low_stock_items = db.session.query(
+    Order.stock_name,
+    db.func.sum(Order.stock_amount).label("total")
+).filter_by(undone=False).group_by(Order.stock_name).having(
+    db.func.sum(Order.stock_amount) < LOW_STOCK_THRESHOLD
+).all()
+
+        db.session.commit()
+
+        # ✅ Now safely inside the POST block
         low_stock_items = db.session.query(
             Order.stock_name,
             db.func.sum(Order.stock_amount).label("total")
@@ -283,9 +299,30 @@ def order_completion():
         ).all()
 
         for item in low_stock_items:
-            notify_admins_low_stock(item.stock_name, item.total)
+            flag = LowStockFlag.query.filter_by(stock_name=item.stock_name).first()
+            if not flag:
+                notify_admins_low_stock(item.stock_name, item.total)
+                db.session.add(LowStockFlag(stock_name=item.stock_name, active=True))
+            elif not flag.active:
+                notify_admins_low_stock(item.stock_name, item.total)
+                flag.active = True
 
+        # ✅ Clear flags if restocked
+        recovered_stock_items = db.session.query(
+            Order.stock_name,
+            db.func.sum(Order.stock_amount).label("total")
+        ).filter_by(undone=False).group_by(Order.stock_name).having(
+            db.func.sum(Order.stock_amount) >= LOW_STOCK_THRESHOLD
+        ).all()
+
+        for item in recovered_stock_items:
+            flag = LowStockFlag.query.filter_by(stock_name=item.stock_name).first()
+            if flag and flag.active:
+                flag.active = False
+
+        db.session.commit()
         return redirect(url_for("stock_summary"))
+
 
 
 # ----------------------------- Stock Summary Page -----------------------------
